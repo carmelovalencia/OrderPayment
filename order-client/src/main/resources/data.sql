@@ -1,0 +1,5 @@
+INSERT INTO Product(id, title, description, price) VALUES ('1', 'Black Watch Strap', 'Leather Black Watch Strap', '1.25')
+INSERT INTO Product(id, title, description, price) VALUES ('2', 'Rolex Watch', 'Rolex Watch with Diamond', '100.00')
+INSERT INTO Product(id, title, description, price) VALUES ('3', 'Casio Vintage Series Unisex Silver Stainless steel Strap WatchA158WA-1D', 'Founded in 1946 by Japanese Engineer Tadao Kashio, Casio had become a brand synonymous with quality and reliability around the world.', '699.50')
+INSERT INTO Product(id, title, description, price) VALUES ('4', 'Greatnes DandD Men’s Black/White Leather Strap Military Quartz Watch C-XY-3999', 'Besides to see the time, do decorative highlight tolerance, and is used as a gift to a friend, watch also can help you to identify the direction In the wild.', '384.00')
+INSERT INTO Product(id, title, description, price) VALUES ('5', 'CWL General Merchandise-GemiusArmyWatchGreen', 'GEMIUS ARMY Military Sport Style Army Men''s Green Canvas Strap Watch', '449.00')
