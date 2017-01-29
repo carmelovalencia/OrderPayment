@@ -1,11 +1,11 @@
 package com.orderpayment.order.controllers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,15 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orderpayment.order.dao.Product;
@@ -34,8 +32,13 @@ public class OrderClientController {
 	@Autowired
 	private ProductRepository productRepo;
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	@RequestMapping(path = "/order/products", method = RequestMethod.GET)
 	public ResponseEntity<?> getProducts() {
+		this.logger.info("===> /order/products - GET");
+		
+		//get all products
 		Iterator<Product> it = this.productRepo.findAll().iterator();
 
 		List<Product> list = new ArrayList<Product>();
@@ -50,8 +53,10 @@ public class OrderClientController {
 	@RequestMapping(path = "order/products/{uid}/purchase", method = RequestMethod.POST)
 	public ResponseEntity<?> purchaseProducts(@RequestParam("productPurchase") String productPurchaseJson,
 			@PathVariable("uid") String userId) {
-		System.out.println("Received Product Purchase: " + productPurchaseJson);
+		this.logger.info("===> /order/products/" + userId + "/purchase - POST");
+		this.logger.info("===> Received Product Purchase: " + productPurchaseJson);
 
+		//convert json string to object
 		ObjectMapper mapper = new ObjectMapper();
 
 		ProductPurchase[] productPurchase = null;
@@ -61,9 +66,11 @@ public class OrderClientController {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			this.logger.error(e.getLocalizedMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 
+		//add the total amount purchase
 		double totalAmount = 0.0;
 
 		for (ProductPurchase pp : productPurchase) {
@@ -72,8 +79,9 @@ public class OrderClientController {
 			}
 		}
 
-		System.out.println("Making Payment for Amount: " + totalAmount);
+		this.logger.info("===> Making Payment for Amount: " + totalAmount);
 
+		//Create a rest template and call the payment service
 		RestTemplate rt = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -87,15 +95,20 @@ public class OrderClientController {
 		String status = rt.postForEntity("http://localhost:8081/payment/" + userId + "/pay", request, String.class)
 				.getBody();
 
+		//Compose the reponse to user
 		ProductPurchaseResponse response = new ProductPurchaseResponse();
 		response.setProductPurchaseList(productPurchase);
 		response.setPurchaseStatus(status);
+		
+		this.logger.info("===> Payment Status: " + status);
 
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
 	@RequestMapping(path = "/info", method = RequestMethod.GET)
 	public ResponseEntity<?> info() {
+		this.logger.info("===> /info - GET");
+
 		return ResponseEntity.status(HttpStatus.OK).body("I am an Order Service...");
 	}
 }

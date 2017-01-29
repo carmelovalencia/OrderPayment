@@ -1,5 +1,7 @@
 package com.orderpayment.payment.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,36 +19,46 @@ public class PaymentClientController {
 	@Autowired
 	private UserRepository userRepo;
 
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	@RequestMapping(path = "/payment/{uid}/pay", method = RequestMethod.POST)
 	public ResponseEntity<?> pay(@RequestParam("totalAmount") double totalAmount, @PathVariable("uid") String userId) {
-		User user = this.userRepo.findOne(userId);
+		this.logger.info("===> /payment/" + userId + "/pay - POST");
 		
+		//get user info
+		User user = this.userRepo.findOne(userId);
+
 		if (user == null) {
+			this.logger.info("===> Invalid User ID: " + userId);
+			
 			return ResponseEntity.status(HttpStatus.OK).body("NOT ACCEPTED. INVALID USER ID.");
 		}
-		
+
 		double eWalletAmount = user.getEwalletamount();
-		
-		System.out.println("Purhcase Received. Amount: " + totalAmount);
-		System.out.println("Current eWallet Amount: " + eWalletAmount);
 
-		String status = "NOT ACCEPTED";
+		this.logger.info("===> Purhcase Received. Amount: " + totalAmount);
+		this.logger.info("===> Current eWallet Amount: " + eWalletAmount);
 
+		String status = "NOT ACCEPTED"; //default
+
+		//check if user has enough money for the purchase
 		if (totalAmount <= eWalletAmount) {
-			status = "ACCEPTED";
+			status = "ACCEPTED"; //user has enough money
 			eWalletAmount -= totalAmount;
 			user.setEwalletamount(eWalletAmount);
 			this.userRepo.save(user);
 		}
-
-		System.out.println("Purhcase Status : " + status);
-		System.out.println("Balance EWalletAmount: " + eWalletAmount);
+		
+		this.logger.info("===> Purhcase Status : " + status);
+		this.logger.info("===> Balance EWalletAmount: " + eWalletAmount);
 
 		return ResponseEntity.status(HttpStatus.OK).body(status);
 	}
 
 	@RequestMapping(path = "/info", method = RequestMethod.GET)
 	public ResponseEntity<?> info() {
+		this.logger.info("===> /info - GET");
+
 		return ResponseEntity.status(HttpStatus.OK).body("I am a Payment Service...");
 	}
 }
