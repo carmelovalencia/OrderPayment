@@ -3,13 +3,19 @@ package com.orderpayment.payment.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.orderpayment.payment.dao.User;
 import com.orderpayment.payment.dao.UserRepository;
@@ -61,4 +67,37 @@ public class PaymentClientController {
 
 		return ResponseEntity.status(HttpStatus.OK).body("I am a Payment Service...");
 	}
+	
+	@RequestMapping(path = "/test", method = RequestMethod.GET)
+	public ResponseEntity<?> runTest() {
+		this.logger.info("===> /test - GET....\n");
+		
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("Calling http://localhost:8081/payment/1/pay....<br>");
+		
+		//test /order/products - GET
+		RestTemplate rt = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+		MultiValueMap<String, String> data = new LinkedMultiValueMap<String, String>();
+		data.add("totalAmount", Double.toString(1));
+
+		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(data,
+				headers);
+		
+		String result = rt.postForEntity("http://localhost:8081/payment/1/pay", request, String.class)
+				.getBody();
+		
+		if (result.startsWith("ACCEPTED")) {
+			builder.append("SUCCESS!!");
+		} else {
+			builder.append("FAILED!!");
+		}
+
+
+		return ResponseEntity.status(HttpStatus.OK).body(builder.toString());
+	}
+
 }
