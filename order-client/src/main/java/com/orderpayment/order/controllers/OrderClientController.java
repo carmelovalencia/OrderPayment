@@ -92,17 +92,22 @@ public class OrderClientController {
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(data,
 				headers);
 
-		String status = rt.postForEntity("http://localhost:8081/payment/" + userId + "/pay", request, String.class)
-				.getBody();
+		try {
+			String status = rt.postForEntity("http://localhost:8081/payment/" + userId + "/pay", request, String.class)
+					.getBody();
 
-		// Compose the reponse to user
-		ProductPurchaseResponse response = new ProductPurchaseResponse();
-		response.setProductPurchaseList(productPurchase);
-		response.setPurchaseStatus(status);
+			// Compose the reponse to user
+			ProductPurchaseResponse response = new ProductPurchaseResponse();
+			response.setProductPurchaseList(productPurchase);
+			response.setPurchaseStatus(status);
 
-		this.logger.info("===> Payment Status: " + status);
+			this.logger.info("===> Payment Status: " + status);
 
-		return ResponseEntity.status(HttpStatus.OK).body(response);
+			return ResponseEntity.status(HttpStatus.OK).body(response);
+		} catch (Exception ex) {
+			this.logger.info("===> Payment Failed. Reason : " + ex.getLocalizedMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getLocalizedMessage());
+		}
 	}
 
 	@RequestMapping(path = "/info", method = RequestMethod.GET)
@@ -117,18 +122,18 @@ public class OrderClientController {
 		this.logger.info("===> /test - GET....\n");
 
 		StringBuilder builder = new StringBuilder();
-		
+
 		String listProduct = this.getAllProducts();
 		builder.append(listProduct);
 		builder.append("<br>");
-		
+
 		String purchaseProduct = this.purchaseProduct();
 		builder.append(purchaseProduct);
 
 		return ResponseEntity.status(HttpStatus.OK).body(builder.toString());
 	}
 
-	//retrieves all products
+	// retrieves all products
 	private String getAllProducts() {
 		StringBuilder builder = new StringBuilder();
 
@@ -154,7 +159,7 @@ public class OrderClientController {
 			return builder.toString();
 		}
 
-		//there should be 5 products returned
+		// there should be 5 products returned
 		if (products != null && products.length == 5) {
 			builder.append("SUCCESS!!");
 		} else {
@@ -164,7 +169,7 @@ public class OrderClientController {
 		return builder.toString();
 	}
 
-	//purhcases a product
+	// purhcases a product
 	private String purchaseProduct() {
 		StringBuilder builder = new StringBuilder();
 
